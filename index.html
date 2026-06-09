@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>程人頻道 大補帖 · C 語言面試大全</title>
+<style>
+  :root{
+    --bg:#0d1117;
+    --bg-soft:#11161f;
+    --panel:#161b25;
+    --panel-2:#1c2230;
+    --line:#222b3a;
+    --ink:#d8e0ee;
+    --ink-dim:#8b97ad;
+    --ink-faint:#5d6779;
+    --acc:#36d399;      /* console green */
+    --acc-dim:#1f7a5b;
+    --amber:#f2b34a;
+    --rose:#f06a8a;
+    --blue:#5aa9f5;
+    --violet:#b18cf0;
+    --mono:"JetBrains Mono","SF Mono",ui-monospace,"Cascadia Code",Menlo,Consolas,monospace;
+    --sans:"Inter",-apple-system,BlinkMacSystemFont,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--sans);line-height:1.7;font-size:16px;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:rgba(54,211,153,.25);color:#fff;}
+
+  /* ---------- layout shell ---------- */
+  .wrap{max-width:1180px;margin:0 auto;padding:0 24px;}
+  .layout{display:grid;grid-template-columns:248px 1fr;gap:48px;align-items:start;}
+
+  /* ---------- header ---------- */
+  header.hero{
+    border-bottom:1px solid var(--line);
+    background:
+      radial-gradient(900px 400px at 80% -10%, rgba(54,211,153,.10), transparent 60%),
+      linear-gradient(180deg,#0a0e15,var(--bg));
+    position:relative;overflow:hidden;
+  }
+  header.hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:linear-gradient(rgba(54,211,153,.035) 1px,transparent 1px),
+                     linear-gradient(90deg,rgba(54,211,153,.035) 1px,transparent 1px);
+    background-size:38px 38px;mask:linear-gradient(180deg,#000,transparent 75%);
+  }
+  .hero-inner{position:relative;padding:62px 0 50px;}
+  .kicker{
+    font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;
+    color:var(--acc);text-transform:uppercase;margin-bottom:18px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .kicker .blink{
+    width:9px;height:16px;background:var(--acc);display:inline-block;
+    animation:blink 1.1s steps(2) infinite;border-radius:1px;vertical-align:-2px;
+  }
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  h1.title{
+    font-family:var(--mono);font-weight:700;
+    font-size:clamp(34px,6vw,62px);line-height:1.02;margin:0 0 6px;
+    letter-spacing:-.01em;color:#fff;
+  }
+  h1.title .slash{color:var(--acc-dim);}
+  .subtitle{
+    font-size:clamp(15px,2.4vw,19px);color:var(--ink-dim);max-width:640px;
+    margin:18px 0 0;
+  }
+  .meta-row{
+    display:flex;flex-wrap:wrap;gap:10px;margin-top:30px;
+  }
+  .chip{
+    font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);
+    border:1px solid var(--line);background:var(--panel);
+    padding:6px 12px;border-radius:6px;
+  }
+  .chip b{color:var(--acc);font-weight:600;}
+
+  /* ---------- sidebar ---------- */
+  aside.toc{
+    position:sticky;top:0;max-height:100vh;overflow-y:auto;
+    padding:40px 0 60px;font-family:var(--mono);
+    scrollbar-width:thin;scrollbar-color:var(--line) transparent;
+  }
+  aside.toc::-webkit-scrollbar{width:6px;}
+  aside.toc::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+  .toc-head{
+    font-size:11px;letter-spacing:.2em;color:var(--ink-faint);
+    text-transform:uppercase;margin:0 0 14px;padding-left:14px;
+  }
+  aside.toc a{
+    display:block;color:var(--ink-dim);text-decoration:none;
+    font-size:13px;padding:5px 0 5px 14px;border-left:2px solid transparent;
+    transition:.16s;line-height:1.4;
+  }
+  aside.toc a .num{color:var(--ink-faint);margin-right:8px;}
+  aside.toc a:hover{color:var(--ink);border-left-color:var(--acc-dim);}
+  aside.toc a.active{color:var(--acc);border-left-color:var(--acc);background:rgba(54,211,153,.05);}
+
+  /* ---------- main column ---------- */
+  main{padding:40px 0 100px;min-width:0;}
+  section{margin-bottom:64px;scroll-margin-top:24px;}
+  .sec-eyebrow{
+    font-family:var(--mono);font-size:12px;letter-spacing:.18em;
+    color:var(--acc);text-transform:uppercase;margin-bottom:8px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .sec-eyebrow .idx{
+    color:var(--ink-faint);
+  }
+  h2.sec-title{
+    font-size:clamp(24px,4vw,34px);font-weight:700;margin:0 0 8px;
+    color:#fff;letter-spacing:-.01em;font-family:var(--mono);
+  }
+  .sec-desc{color:var(--ink-dim);margin:0 0 28px;max-width:720px;font-size:15.5px;}
+  h3{font-size:20px;font-weight:650;margin:36px 0 12px;color:#fff;
+     display:flex;align-items:baseline;gap:10px;}
+  h3 .q{font-family:var(--mono);color:var(--acc);font-size:14px;
+        border:1px solid var(--acc-dim);border-radius:5px;padding:1px 7px;flex:none;}
+  h4{font-size:16px;font-weight:650;margin:24px 0 8px;color:var(--ink);}
+  p{margin:0 0 14px;}
+  p.lead{color:var(--ink-dim);}
+  a.link{color:var(--blue);text-decoration:none;border-bottom:1px solid rgba(90,169,245,.3);}
+  a.link:hover{border-bottom-color:var(--blue);}
+  strong{color:#fff;font-weight:650;}
+  code.inline{
+    font-family:var(--mono);font-size:.88em;background:var(--panel-2);
+    color:var(--acc);padding:2px 6px;border-radius:4px;border:1px solid var(--line);
+  }
+
+  /* ---------- code blocks ---------- */
+  .code{
+    background:#0a0e15;border:1px solid var(--line);border-radius:10px;
+    margin:16px 0;overflow:hidden;
+  }
+  .code-bar{
+    display:flex;align-items:center;gap:8px;padding:9px 14px;
+    border-bottom:1px solid var(--line);background:var(--panel);
+  }
+  .dot{width:11px;height:11px;border-radius:50%;}
+  .dot.r{background:#ff5f56;}.dot.y{background:#ffbd2e;}.dot.g{background:#27c93f;}
+  .code-bar .fname{font-family:var(--mono);font-size:12px;color:var(--ink-faint);margin-left:6px;}
+  pre{margin:0;padding:16px 18px;overflow-x:auto;font-family:var(--mono);
+      font-size:13.5px;line-height:1.65;color:#cdd6e6;
+      scrollbar-width:thin;scrollbar-color:var(--line) transparent;}
+  pre::-webkit-scrollbar{height:8px;}
+  pre::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px;}
+  /* token coloring (applied via spans) */
+  .t-kw{color:var(--rose);}
+  .t-ty{color:var(--blue);}
+  .t-fn{color:var(--amber);}
+  .t-str{color:var(--acc);}
+  .t-num{color:var(--violet);}
+  .t-com{color:var(--ink-faint);font-style:italic;}
+  .t-pp{color:#e08be0;}
+
+  /* ---------- answer / callout ---------- */
+  .ans{
+    border-left:3px solid var(--acc);background:rgba(54,211,153,.06);
+    border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:15px;
+  }
+  .ans .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+            color:var(--acc);text-transform:uppercase;display:block;margin-bottom:4px;}
+  .note{
+    border-left:3px solid var(--amber);background:rgba(242,179,74,.06);
+    border-radius:0 8px 8px 0;padding:12px 16px;margin:14px 0;font-size:14.5px;color:var(--ink-dim);
+  }
+  .note .tag{font-family:var(--mono);font-size:11px;letter-spacing:.12em;
+            color:var(--amber);text-transform:uppercase;display:block;margin-bottom:4px;}
+
+  /* ---------- tables ---------- */
+  .tbl{width:100%;border-collapse:collapse;margin:16px 0;font-size:14.5px;
+       border:1px solid var(--line);border-radius:10px;overflow:hidden;}
+  .tbl th{background:var(--panel);color:var(--acc);text-align:left;
+          font-family:var(--mono);font-size:12.5px;letter-spacing:.04em;
+          padding:11px 14px;border-bottom:1px solid var(--line);font-weight:600;}
+  .tbl td{padding:11px 14px;border-bottom:1px solid var(--line);color:var(--ink-dim);vertical-align:top;}
+  .tbl tr:last-child td{border-bottom:none;}
+  .tbl tr:nth-child(even) td{background:rgba(255,255,255,.012);}
+  .tbl td code,.tbl th code{font-family:var(--mono);color:var(--ink);}
+  .tbl .yes{color:var(--acc);}.tbl .no{color:var(--rose);}
+
+  /* ---------- figure ---------- */
+  figure{margin:24px 0;}
+  figure svg{display:block;width:100%;height:auto;
+             background:var(--bg-soft);border:1px solid var(--line);border-radius:12px;}
+  figcaption{font-family:var(--mono);font-size:12.5px;color:var(--ink-faint);
+             text-align:center;margin-top:10px;}
+
+  /* ---------- company cards ---------- */
+  .firm{
+    border:1px solid var(--line);border-radius:12px;background:var(--panel);
+    padding:20px 22px;margin:18px 0;
+  }
+  .firm-head{display:flex;align-items:center;gap:12px;margin-bottom:6px;}
+  .firm-logo{
+    width:38px;height:38px;border-radius:9px;flex:none;
+    display:grid;place-items:center;font-family:var(--mono);font-weight:700;
+    font-size:17px;color:#0a0e15;
+  }
+  .firm-name{font-size:18px;font-weight:650;color:#fff;}
+  .firm-sub{font-family:var(--mono);font-size:12px;color:var(--ink-faint);}
+
+  ol.steps{counter-reset:s;list-style:none;padding:0;margin:14px 0;}
+  ol.steps li{position:relative;padding:4px 0 4px 38px;margin-bottom:6px;color:var(--ink-dim);}
+  ol.steps li::before{
+    counter-increment:s;content:counter(s,decimal-leading-zero);
+    position:absolute;left:0;top:4px;font-family:var(--mono);font-size:12px;
+    color:var(--acc);border:1px solid var(--acc-dim);border-radius:5px;
+    width:26px;height:24px;display:grid;place-items:center;
+  }
+  ul.clean{list-style:none;padding:0;margin:12px 0;}
+  ul.clean li{position:relative;padding:3px 0 3px 22px;color:var(--ink-dim);}
+  ul.clean li::before{content:"›";position:absolute;left:4px;color:var(--acc);font-family:var(--mono);}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:32px 0;color:var(--ink-faint);
+         font-family:var(--mono);font-size:12.5px;background:#0a0e15;}
+  footer a{color:var(--ink-dim);text-decoration:none;}
+  footer a:hover{color:var(--acc);}
+
+  /* ---------- progress bar ---------- */
+  #progress{position:fixed;top:0;left:0;height:2px;background:var(--acc);width:0;z-index:50;
+            box-shadow:0 0 8px rgba(54,211,153,.6);}
+
+  /* mobile */
+  @media(max-width:880px){
+    .layout{grid-template-columns:1fr;gap:0;}
+    aside.toc{position:static;max-height:none;padding:24px 0;
+              border-bottom:1px solid var(--line);margin-bottom:8px;}
+    aside.toc a{display:inline-block;border-left:none;border-bottom:2px solid transparent;
+                padding:6px 12px;}
+    aside.toc a.active{border-left:none;border-bottom-color:var(--acc);}
+    .toc-grid{display:flex;flex-wrap:wrap;}
+  }
+</style>
+</head>
+<body>
+<div id="progress"></div>
+
+<header class="hero">
+  <div class="wrap hero-inner">
+    <div class="kicker"><span class="blink"></span>程人頻道 · 大補帖 Ver 1.1 · REORGANIZED</div>
+    <h1 class="title">C 語言<span class="slash">/</span>面試大全</h1>
+    <p class="subtitle">從記憶體配置、指標判讀、巨集到位元運算與經典演算法題 —— 一份為韌體與軟體工程師面試準備的速查手冊，含台廠（瑞昱、群聯）實戰題庫。</p>
+    <div class="meta-row">
+      <span class="chip"><b>5</b> 核心觀念章節</span>
+      <span class="chip"><b>40+</b> 題目與解答</span>
+      <span class="chip"><b>2</b> 公司實戰題庫</span>
+      <span class="chip">語言 · <b>C / C++</b></span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+<div class="layout">
+  <aside class="toc">
+    <p class="toc-head">// 目錄</p>
+    <nav class="toc-grid">
+      <a href="#mem"><span class="num">01</span>記憶體配置</a>
+      <a href="#keywords"><span class="num">02</span>關鍵字與限定詞</a>
+      <a href="#pointer"><span class="num">03</span>指標與宣告判讀</a>
+      <a href="#macro"><span class="num">04</span>巨集與前置處理</a>
+      <a href="#bitwise"><span class="num">05</span>位元運算</a>
+      <a href="#algo"><span class="num">06</span>程式與演算法</a>
+      <a href="#firms"><span class="num">07</span>台廠實戰題庫</a>
+      <a href="#brain"><span class="num">08</span>智力 / 機智題</a>
+    </nav>
+  </aside>
+
+  <main>
+
+<!-- ============ 01 MEMORY ============ -->
+<section id="mem">
+  <div class="sec-eyebrow"><span class="idx">01</span> MEMORY · 記憶體配置</div>
+  <h2 class="sec-title">程式的記憶體佈局</h2>
+  <p class="sec-desc">典型 C 程式執行時，記憶體分成 text、data、bss、heap、stack 與 system 六大區段。理解「變數被放在哪」是面試的高頻送分題。</p>
+
+  <figure>
+    <svg viewBox="0 0 760 540" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+      <defs>
+        <linearGradient id="gSys" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c0392b"/><stop offset="1" stop-color="#e35a4a"/></linearGradient>
+        <linearGradient id="gStk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e8748a"/><stop offset="1" stop-color="#f06a8a" stop-opacity="1"/></linearGradient>
+        <linearGradient id="gHeap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#d8a25a"/><stop offset="1" stop-color="#e8bd7c"/></linearGradient>
+        <linearGradient id="gBss" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8a7b4a"/><stop offset="1" stop-color="#a8975f"/></linearGradient>
+        <linearGradient id="gData" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#7f8a4f"/><stop offset="1" stop-color="#9aa766"/></linearGradient>
+        <linearGradient id="gText" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5a8fb5" /><stop offset="1" stop-color="#79b0d6"/></linearGradient>
+        <marker id="arr" markerWidth="9" markerHeight="9" refX="5" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#36d399"/></marker>
+      </defs>
+
+      <!-- address labels -->
+      <text x="20" y="40" fill="#8b97ad" font-size="13">高位址</text>
+      <text x="20" y="55" fill="#5d6779" font-size="11">0xFFFF…</text>
+      <text x="20" y="510" fill="#8b97ad" font-size="13">低位址</text>
+      <text x="20" y="525" fill="#5d6779" font-size="11">0x0000…</text>
+
+      <!-- bars -->
+      <g>
+        <rect x="120" y="30"  width="270" height="62" rx="6" fill="url(#gSys)"/>
+        <text x="255" y="66" fill="#fff" font-size="18" text-anchor="middle" font-weight="700">system</text>
+
+        <rect x="120" y="102" width="270" height="70" rx="6" fill="#e8748a"/>
+        <text x="255" y="135" fill="#2a0e14" font-size="18" text-anchor="middle" font-weight="700">stack</text>
+        <text x="255" y="156" fill="#2a0e14" font-size="11" text-anchor="middle">↓ 向低位址成長</text>
+
+        <!-- gap -->
+        <rect x="120" y="184" width="270" height="118" rx="6" fill="#11161f" stroke="#222b3a" stroke-dasharray="4 4"/>
+        <text x="255" y="247" fill="#5d6779" font-size="13" text-anchor="middle">尚未使用區域</text>
+        <line x1="255" y1="178" x2="255" y2="200" stroke="#36d399" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="255" y1="296" x2="255" y2="278" stroke="#36d399" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <rect x="120" y="314" width="270" height="58" rx="6" fill="url(#gHeap)"/>
+        <text x="255" y="343" fill="#2a1c08" font-size="18" text-anchor="middle" font-weight="700">heap</text>
+        <text x="255" y="361" fill="#2a1c08" font-size="11" text-anchor="middle">↑ 向高位址成長</text>
+
+        <rect x="120" y="382" width="270" height="40" rx="6" fill="url(#gBss)"/>
+        <text x="255" y="407" fill="#15130a" font-size="16" text-anchor="middle" font-weight="700">bss</text>
+
+        <rect x="120" y="432" width="270" height="40" rx="6" fill="url(#gData)"/>
+        <text x="255" y="457" fill="#13150a" font-size="16" text-anchor="middle" font-weight="700">data</text>
+
+        <rect x="120" y="482" width="270" height="40" rx="6" fill="url(#gText)"/>
+        <text x="255" y="507" fill="#0a1620" font-size="16" text-anchor="middle" font-weight="700">text</text>
+      </g>
+
+      <!-- right side descriptions -->
+      <g font-size="13.5" fill="#d8e0ee">
+        <g transform="translate(420,0)">
+          <path d="M0,61 h18" stroke="#5d6779"/><text x="26" y="56" fill="#f06a8a">命令列參數與環境變數</text><text x="26" y="73" fill="#5d6779" font-size="11">argv / env，與系統相關</text>
+        </g>
+        <g transform="translate(420,0)">
+          <path d="M0,137 h18" stroke="#5d6779"/><text x="26" y="132">區域變數 · 函式呼叫狀態</text><text x="26" y="149" fill="#5d6779" font-size="11">每次呼叫建立一個 stack frame</text>
+        </g>
+        <g transform="translate(420,0)">
+          <path d="M0,343 h18" stroke="#5d6779"/><text x="26" y="338">動態配置變數</text><text x="26" y="355" fill="#5d6779" font-size="11">malloc / new 配置於此</text>
+        </g>
+        <g transform="translate(420,0)">
+          <path d="M0,402 h18" stroke="#5d6779"/><text x="26" y="398">未初始化靜態變數</text><text x="26" y="414" fill="#5d6779" font-size="11">程式啟動前初始化為 0 / null</text>
+        </g>
+        <g transform="translate(420,0)">
+          <path d="M0,452 h18" stroke="#5d6779"/><text x="26" y="448">已初始化靜態變數</text><text x="26" y="464" fill="#5d6779" font-size="11">全域 / static 變數（有初值）</text>
+        </g>
+        <g transform="translate(420,0)">
+          <path d="M0,502 h18" stroke="#5d6779"/><text x="26" y="498">程式碼（CPU 指令）</text><text x="26" y="514" fill="#5d6779" font-size="11">通常唯讀、可多程序共用</text>
+        </g>
+      </g>
+    </svg>
+    <figcaption>fig.01 — 典型 C 程式記憶體佈局，stack 與 heap 由兩端相向成長</figcaption>
+  </figure>
+
+  <table class="tbl">
+    <thead><tr><th>區段</th><th>存放內容</th><th>典型例子</th><th>特性</th></tr></thead>
+    <tbody>
+      <tr><td><code>text</code></td><td>可執行 CPU 指令</td><td>函式本體</td><td>唯讀、可共用</td></tr>
+      <tr><td><code>data</code></td><td>已初始化靜態變數</td><td><code>int g = 5;</code> 全域</td><td>分唯讀 / 可讀寫</td></tr>
+      <tr><td><code>bss</code></td><td>未初始化靜態變數</td><td><code>static int c;</code></td><td>啟動前歸零</td></tr>
+      <tr><td><code>heap</code></td><td>動態配置</td><td><code>malloc / new</code></td><td>向高位址成長</td></tr>
+      <tr><td><code>stack</code></td><td>區域變數、呼叫狀態</td><td>函式內 <code>int x;</code></td><td>向低位址成長</td></tr>
+      <tr><td><code>system</code></td><td>命令列參數、環境變數</td><td><code>argv</code> / env</td><td>與系統相關</td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="q">Q</span> Little-Endian vs Big-Endian</h3>
+  <p class="lead">同一個多位元組數值在記憶體中的位元組排列順序不同。Little-endian 把最低位元組放在最低位址（x86 / ARM 常見）；Big-endian 反之（網路位元組序）。</p>
+
+  <figure>
+    <svg viewBox="0 0 720 220" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+      <text x="20" y="34" fill="#fff" font-size="15" font-weight="700">uint32_t v = 0x12345678;</text>
+      <!-- little -->
+      <text x="20" y="78" fill="#36d399" font-size="13">Little-Endian</text>
+      <g font-size="14" text-anchor="middle">
+        <rect x="150" y="62" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="210" y="87" fill="#f06a8a">0x78</text>
+        <rect x="280" y="62" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="340" y="87" fill="#f2b34a">0x56</text>
+        <rect x="410" y="62" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="470" y="87" fill="#5aa9f5">0x34</text>
+        <rect x="540" y="62" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="600" y="87" fill="#b18cf0">0x12</text>
+      </g>
+      <!-- big -->
+      <text x="20" y="158" fill="#5aa9f5" font-size="13">Big-Endian</text>
+      <g font-size="14" text-anchor="middle">
+        <rect x="150" y="142" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="210" y="167" fill="#b18cf0">0x12</text>
+        <rect x="280" y="142" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="340" y="167" fill="#5aa9f5">0x34</text>
+        <rect x="410" y="142" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="470" y="167" fill="#f2b34a">0x56</text>
+        <rect x="540" y="142" width="120" height="40" rx="5" fill="#161b25" stroke="#222b3a"/><text x="600" y="167" fill="#f06a8a">0x78</text>
+      </g>
+      <text x="150" y="208" fill="#5d6779" font-size="11">低位址 (addr+0)</text>
+      <text x="660" y="208" fill="#5d6779" font-size="11" text-anchor="end">高位址 (addr+3)</text>
+    </svg>
+    <figcaption>fig.02 — <code>0x12345678</code> 在兩種位元組序下的記憶體排列</figcaption>
+  </figure>
+</section>
+
+<!-- ============ 02 KEYWORDS ============ -->
+<section id="keywords">
+  <div class="sec-eyebrow"><span class="idx">02</span> KEYWORDS · 關鍵字與限定詞</div>
+  <h2 class="sec-title">extern · static · const · volatile</h2>
+  <p class="sec-desc">儲存類別與型別限定詞是 C 語言觀念題的核心。重點不在背定義，而在「編譯器看到它時行為會怎麼改變」。</p>
+
+  <h3><span class="q">extern</span> 宣告變數定義在他處</h3>
+  <p><code class="inline">extern</code> 告訴編譯器某個變數的定義在別的位置（同檔或他檔）。它只是「宣告」，不配置空間。若在 <code class="inline">extern</code> 同時給初值會被當成「定義」，造成重複定義錯誤。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">extern.c</span></div>
+<pre><span class="t-com">// some.c</span>
+<span class="t-ty">double</span> some_var = <span class="t-num">1000</span>;
+
+<span class="t-com">// main.c — 正確用法：先宣告、再使用</span>
+<span class="t-kw">extern</span> <span class="t-ty">double</span> some_var;   <span class="t-com">// 只宣告，編譯器去他處找定義</span>
+some_var = <span class="t-num">100</span>;            <span class="t-com">// OK</span>
+
+<span class="t-kw">extern</span> <span class="t-ty">double</span> some_var = <span class="t-num">100</span>; <span class="t-com">// ✗ error: 同時有 extern 與初值</span></pre>
+  </div>
+
+  <h3><span class="q">static</span> 延長壽命 · 限縮可見範圍</h3>
+  <ul class="clean">
+    <li><strong>區域 static 變數：</strong>函式結束後仍存活於記憶體，直到程式結束；但外部仍無法存取。</li>
+    <li><strong>全域 static 變數 / 函式：</strong>可見範圍僅限於該原始檔，可避免命名衝突。</li>
+  </ul>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">static_counter.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">count</span>(<span class="t-ty">void</span>) {
+    <span class="t-kw">static</span> <span class="t-ty">int</span> c = <span class="t-num">1</span>;   <span class="t-com">// 只初始化一次，跨呼叫保留值</span>
+    <span class="t-fn">printf</span>(<span class="t-str">"%d\n"</span>, c);
+    c++;
+}
+<span class="t-com">// 呼叫 10 次 → 印出 1,2,3,…,10</span></pre>
+  </div>
+
+  <h3><span class="q">volatile</span> 禁止最佳化、每次都讀實體記憶體</h3>
+  <p>被 <code class="inline">volatile</code> 修飾的變數可能被「非預期地」更新，因此編譯器不對它做最佳化，每次存取都從記憶體實體位址讀最新值，而非快取在暫存器。嵌入式系統處理 I/O、中斷、RTOS 時尤其重要。</p>
+  <ul class="clean">
+    <li>修飾 ISR（中斷處理）中可能被改的全域變數</li>
+    <li>修飾多執行緒共用的全域變數</li>
+    <li>設備硬體暫存器（如狀態暫存器）</li>
+  </ul>
+  <div class="note"><span class="tag">面試陷阱</span>
+    <code class="inline">int SQR(volatile int *a){ return (*a)*(*a); }</code> 有 bug —— <code class="inline">*a</code> 被讀兩次，volatile 下兩次值可能不同，結果未必是平方。正解：先讀進區域變數 <code class="inline">int b = *a; return b*b;</code></div>
+
+  <h3><span class="q">Q</span> const 與 volatile 可以合用嗎？</h3>
+  <p><code class="inline">extern const volatile unsigned int rt_clock;</code> —— RTOS 中常見。<code class="inline">rt_clock</code> 被時鐘中斷更新（所以 volatile，要每次重讀），但程式其他地方不應修改它（所以 const）。兩者並不矛盾。</p>
+</section>
+
+<!-- ============ 03 POINTER ============ -->
+<section id="pointer">
+  <div class="sec-eyebrow"><span class="idx">03</span> POINTER · 指標與宣告判讀</div>
+  <h2 class="sec-title">複雜宣告的「右左法則」</h2>
+  <p class="sec-desc">面試最愛考的就是讀懂一串 <code class="inline">int (*p[10])(int)</code> 到底是什麼。從識別字開始，先右後左、遇括號優先，逐層往外讀。</p>
+
+  <table class="tbl">
+    <thead><tr><th>宣告</th><th>含意</th></tr></thead>
+    <tbody>
+      <tr><td><code>int p;</code></td><td>一個整數</td></tr>
+      <tr><td><code>int *p;</code></td><td>指向整數的指標</td></tr>
+      <tr><td><code>int **p;</code></td><td>指向「整數指標」的指標</td></tr>
+      <tr><td><code>int p[10];</code></td><td>10 個整數的陣列</td></tr>
+      <tr><td><code>int *p[10];</code></td><td>10 個「整數指標」的陣列</td></tr>
+      <tr><td><code>int (*p)[10];</code></td><td>指向「10 個整數陣列」的指標</td></tr>
+      <tr><td><code>int (*p)(int);</code></td><td>指向函式的指標（吃 int、回傳 int）</td></tr>
+      <tr><td><code>int (*p[10])(int);</code></td><td>10 個函式指標的陣列</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><span class="tag">關鍵差異</span>
+    <code class="inline">int *ptr[10]</code> 是「指標的陣列」（陣列在外）；<br>
+    <code class="inline">int (*ptr)[10]</code> 是「指向陣列的指標」（括號讓 ptr 先是指標）。</div>
+
+  <h3><span class="q">Q</span> const 修飾的位置決定誰不可變</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">const_ptr.c</span></div>
+<pre><span class="t-kw">const</span> <span class="t-ty">int</span> *foo;        <span class="t-com">// 指向 const int：內容不可改，指標可改</span>
+<span class="t-ty">int</span> <span class="t-kw">const</span> *foo;        <span class="t-com">// 同上（const 與 int 可互換位置）</span>
+<span class="t-ty">int</span> * <span class="t-kw">const</span> foo;       <span class="t-com">// const 指標：指標不可改，內容可改</span>
+<span class="t-ty">int</span> <span class="t-kw">const</span> * <span class="t-kw">const</span> foo; <span class="t-com">// 指標與內容都不可改</span></pre>
+  </div>
+  <p class="lead">口訣：const 在 <code class="inline">*</code> 左邊 → 鎖「內容」；const 在 <code class="inline">*</code> 右邊 → 鎖「指標」。</p>
+
+  <h3><span class="q">Q</span> 函式指標：把函式當成變數傳遞</h3>
+  <p>函式名稱本身就是指向該函式記憶體位址的參考。可宣告 <code class="inline">int (*op)(int,int)</code> 並讓它在 <code class="inline">add</code> / <code class="inline">mult</code> 間切換。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">func_ptr.c</span></div>
+<pre><span class="t-ty">int</span> <span class="t-fn">add</span>(<span class="t-ty">int</span> a,<span class="t-ty">int</span> b){ <span class="t-kw">return</span> a+b; }
+<span class="t-ty">int</span> <span class="t-fn">mult</span>(<span class="t-ty">int</span> a,<span class="t-ty">int</span> b){ <span class="t-kw">return</span> a*b; }
+
+<span class="t-ty">int</span> <span class="t-fn">main</span>(){
+    <span class="t-ty">int</span> (*op)(<span class="t-ty">int</span>,<span class="t-ty">int</span>);
+    op = add;  <span class="t-fn">printf</span>(<span class="t-str">"%d\n"</span>, <span class="t-fn">op</span>(<span class="t-num">3</span>,<span class="t-num">5</span>)); <span class="t-com">// 8</span>
+    op = mult; <span class="t-fn">printf</span>(<span class="t-str">"%d\n"</span>, <span class="t-fn">op</span>(<span class="t-num">3</span>,<span class="t-num">5</span>)); <span class="t-com">// 15</span>
+}</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 經典輸出題：<code class="inline">a+1</code> vs <code class="inline">&a+1</code></h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">ptr_arith.c</span></div>
+<pre><span class="t-ty">int</span> a[<span class="t-num">5</span>] = {<span class="t-num">1</span>,<span class="t-num">2</span>,<span class="t-num">3</span>,<span class="t-num">4</span>,<span class="t-num">5</span>};
+<span class="t-ty">int</span> *p = (<span class="t-ty">int</span>*)(&a + <span class="t-num">1</span>);
+<span class="t-com">// *(a+1)  = a[1] = 2</span>
+<span class="t-com">// *(p-1)  = a[4] = 5</span></pre>
+  </div>
+  <div class="ans"><span class="tag">為什麼</span>
+    <code class="inline">a+1</code> 的型別是 <code class="inline">int*</code>，加 1 跳一個 <code class="inline">int</code>（4 bytes）→ 指向 <code class="inline">a[1]</code>。<br>
+    <code class="inline">&a+1</code> 的型別是 <code class="inline">int(*)[5]</code>，加 1 跳「整個陣列」（20 bytes）→ 指向陣列尾端之後；<code class="inline">p-1</code> 回到 <code class="inline">a[4]</code>。</div>
+
+  <h3><span class="q">Q</span> 後置 / 前置遞增的指標副作用</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">inc.c</span></div>
+<pre><span class="t-ty">int</span> a[<span class="t-num">5</span>] = {<span class="t-num">1</span>,<span class="t-num">2</span>,<span class="t-num">3</span>,<span class="t-num">4</span>,<span class="t-num">5</span>};
+<span class="t-ty">int</span> *p = a;
+*(p++) += <span class="t-num">123</span>;   <span class="t-com">// 改 a[0]，p 移到 a[1]</span>
+*(++p) += <span class="t-num">123</span>;   <span class="t-com">// p 先移到 a[2]，改 a[2]</span>
+<span class="t-com">// 結果：{124, 2, 126, 4, 5}</span></pre>
+  </div>
+  <div class="note"><span class="tag">變化題</span>
+    若是 <code class="inline">*(p++) += 100; *(++p) += 97;</code> → 結果為 <code class="inline">{101, 2, 100, 4, 5}</code>。萬年面試題，務必手算 trace 過一遍。</div>
+
+  <h3><span class="q">Q</span> 用 <code class="inline">a[ ]</code> 取值的小技巧</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">offset.c</span></div>
+<pre><span class="t-ty">int</span> a[<span class="t-num">10</span>] = {<span class="t-num">1</span>,<span class="t-num">2</span>,…,<span class="t-num">10</span>};
+<span class="t-ty">int</span> *p = &(a + <span class="t-num">1</span>)[<span class="t-num">3</span>]; <span class="t-com">// 等同 a[1+3] = a[4]</span>
+<span class="t-fn">printf</span>(<span class="t-str">"%d\n"</span>, *p);      <span class="t-com">// 輸出 5</span></pre>
+  </div>
+</section>
+
+<!-- ============ 04 MACRO ============ -->
+<section id="macro">
+  <div class="sec-eyebrow"><span class="idx">04</span> MACRO · 巨集與前置處理</div>
+  <h2 class="sec-title">#define 的陷阱與技巧</h2>
+  <p class="sec-desc">巨集在前置處理階段做純文字替換，不做型別檢查也沒有運算優先序概念 —— 這正是它最容易出錯之處。括號是你的好朋友。</p>
+
+  <h3><span class="q">Q</span> 為什麼 <code class="inline">#define SUM(a,b) a+b</code> 會出包？</h3>
+  <p>若呼叫 <code class="inline">SUM(2,5)*10</code>，文字展開成 <code class="inline">2 + 5 * 10</code>，因為先乘後加 → 答案是 <strong>52</strong> 而非預期的 70。正確寫法要把整體與每個參數都包上括號。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">macro_pitfalls.c</span></div>
+<pre><span class="t-pp">#define</span> SUM(a,b)   ((a)+(b))           <span class="t-com">// 正確：全包括號</span>
+<span class="t-pp">#define</span> MAX(x,y)   ((x)>=(y)?(x):(y))   <span class="t-com">// 求最大值</span>
+<span class="t-pp">#define</span> MIN(x,y)   ((x)<=(y)?(x):(y))   <span class="t-com">// 求最小值</span>
+<span class="t-pp">#define</span> SQUARE(x)  ((x)*(x))            <span class="t-com">// 平方</span>
+<span class="t-pp">#define</span> SECONDS_PER_YEAR (60*60*24*365)UL <span class="t-com">// 一年秒數，UL 防溢位</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 字串化運算子 <code class="inline">#</code></h3>
+  <p>要寫一個巨集 <code class="inline">FUN(X)</code> 印出 X 的 ASCII code：用 <code class="inline">#</code> 把參數轉成字串，再取第一個字元。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">stringize.c</span></div>
+<pre><span class="t-pp">#define</span> FUN(X) (#X[<span class="t-num">0</span>])
+<span class="t-fn">printf</span>(<span class="t-str">"%d \n"</span>, <span class="t-fn">FUN</span>(a)); <span class="t-com">// 印出 'a' 的 ASCII = 97</span></pre>
+  </div>
+
+  <div class="note"><span class="tag">macro 的隱藏 bug</span>
+    <code class="inline">#define ADD_TWO(x,y) x+=2;y+=2;</code> 配上 <code class="inline">if(flag) ADD_TWO(j,k);</code> 展開後，只有 <code class="inline">j+=2;</code> 受 if 控制，<code class="inline">k+=2;</code> 永遠執行 —— 這是多語句巨集未用 <code class="inline">do{…}while(0)</code> 包起來的經典災難。</div>
+
+  <h3><span class="q">inline</span> vs <code class="inline">#define</code></h3>
+  <p><code class="inline">inline</code> 也像巨集般展開以加速，但更安全：</p>
+  <ul class="clean">
+    <li>參數只計算一次，避免巨集重複求值的錯誤</li>
+    <li>參數型別會被檢查並做必要轉換</li>
+    <li>編譯器不一定真的展開 —— inline 僅是「建議」</li>
+  </ul>
+
+  <h3><span class="q">Q</span> 用 typedef 簡化函式指標宣告</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">typedef_fp.c</span></div>
+<pre><span class="t-com">// 改寫 void(*(*papf)[3])(char *);</span>
+<span class="t-kw">typedef</span> <span class="t-ty">void</span>(*pf)(<span class="t-ty">char</span> *);  <span class="t-com">// pf = 指向 (吃 char*) 函式的指標</span>
+pf (*papf)[<span class="t-num">3</span>];               <span class="t-com">// papf = 指向「3 個 pf 陣列」的指標</span></pre>
+  </div>
+</section>
+
+<!-- ============ 05 BITWISE ============ -->
+<section id="bitwise">
+  <div class="sec-eyebrow"><span class="idx">05</span> BITWISE · 位元運算</div>
+  <h2 class="sec-title">用位元思考</h2>
+  <p class="sec-desc">韌體面試的命脈。乘除取餘改成位移與遮罩、不用暫存變數交換、判斷 2 的冪次 —— 這些都是必背招式。</p>
+
+  <h3><span class="q">Q</span> 用位元運算取代算術</h3>
+  <table class="tbl">
+    <thead><tr><th>需求</th><th>位元寫法</th><th>原理</th></tr></thead>
+    <tbody>
+      <tr><td><code>N % 4</code></td><td><code>N & 3</code></td><td>取低 2 位</td></tr>
+      <tr><td><code>N / 16</code></td><td><code>N &gt;&gt; 4</code></td><td>右移 4 位</td></tr>
+      <tr><td><code>N * 2</code></td><td><code>N &lt;&lt; 1</code></td><td>左移 1 位</td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="q">Q</span> set / clear / inverse 指定位元</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">bit_ops.c</span></div>
+<pre><span class="t-pp">#define</span> SET_BIT(x,n)     ((x) |=  (<span class="t-num">1</span> &lt;&lt; (n)))  <span class="t-com">// 設為 1</span>
+<span class="t-pp">#define</span> CLEAR_BIT(x,n)   ((x) &= ~(<span class="t-num">1</span> &lt;&lt; (n)))  <span class="t-com">// 設為 0（遮罩後 AND）</span>
+<span class="t-pp">#define</span> INVERSE_BIT(x,n) ((x) ^=  (<span class="t-num">1</span> &lt;&lt; (n)))  <span class="t-com">// 反轉</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 不用第三變數交換兩數（XOR swap）</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">xor_swap.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">xorSwap</span>(<span class="t-ty">int</span> *x, <span class="t-ty">int</span> *y){
+    <span class="t-kw">if</span> (x != y){      <span class="t-com">// 防同位址自我清零</span>
+        *x ^= *y;
+        *y ^= *x;
+        *x ^= *y;
+    }
+}</pre>
+  </div>
+  <div class="note"><span class="tag">小心</span> 若 <code class="inline">x == y</code>（同一位址），XOR swap 會把該值清成 0，務必先判斷。</div>
+
+  <h3><span class="q">Q</span> 一行判斷是否為 2 的冪次</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">power_of_two.c</span></div>
+<pre><span class="t-ty">bool</span> <span class="t-fn">isPowerOfTwo</span>(<span class="t-ty">int</span> n){
+    <span class="t-kw">return</span> n > <span class="t-num">0</span> && (n & (n-<span class="t-num">1</span>)) == <span class="t-num">0</span>;
+}
+<span class="t-com">// 2的冪次只有一個 bit 為 1，n&(n-1) 會清掉它變 0</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 布林代數化簡：v 的值？</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">bool_algebra.c</span></div>
+<pre><span class="t-ty">unsigned long</span> v1 = <span class="t-num">0x00001111</span>;
+<span class="t-ty">unsigned long</span> v2 = <span class="t-num">0x00001202</span>;
+v = (v1 & ~v2) | v2;
+<span class="t-com">// = (v1|v2) & (~v2|v2) = (v1|v2) & 1 = v1 | v2</span>
+<span class="t-com">// = 0x00001313</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 不用除法 / 取餘判斷是否為 3 的倍數</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">multiple_of_3.c</span></div>
+<pre><span class="t-ty">int</span> <span class="t-fn">divide3</span>(<span class="t-ty">int</span> a){
+    <span class="t-ty">int</span> ans = <span class="t-num">0</span>;
+    <span class="t-kw">while</span>(a){
+        ans += a & <span class="t-num">1</span>; a >>= <span class="t-num">1</span>; <span class="t-com">// 奇數位</span>
+        ans -= a & <span class="t-num">1</span>; a >>= <span class="t-num">1</span>; <span class="t-com">// 偶數位（相減）</span>
+    }
+    <span class="t-kw">return</span> !ans;  <span class="t-com">// 奇偶位元和之差為 0 → 3 的倍數</span>
+}</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 求最高位元在第幾位（瑞昱題）</h3>
+  <p><code class="inline">int a = 0xfafc;</code> 求第 9 個 bit 值：<code class="inline">return (a >> 8) & 1;</code> —— 右移 8 位後 AND 1 取出該位。<code class="inline">0xfafc = 1111101011111100</code>，第 9 位為 <strong>0</strong>。</p>
+</section>
+
+<!-- ============ 06 ALGO ============ -->
+<section id="algo">
+  <div class="sec-eyebrow"><span class="idx">06</span> ALGORITHMS · 程式與演算法</div>
+  <h2 class="sec-title">上機常見題型</h2>
+  <p class="sec-desc">字串處理、排序、Linked List 與經典 DP 題。多數可在白板手寫，重點是邊界條件與時間 / 空間複雜度的權衡。</p>
+
+  <h3><span class="q">字串</span> 原地反轉字串</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">reverse_string.c</span></div>
+<pre><span class="t-ty">char</span>* <span class="t-fn">reverseString</span>(<span class="t-ty">char</span>* s){
+    <span class="t-ty">size_t</span> len = <span class="t-fn">strlen</span>(s);
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; len/<span class="t-num">2</span>; i++){
+        <span class="t-ty">char</span> t = s[i];
+        s[i] = s[len-<span class="t-num">1</span>-i];
+        s[len-<span class="t-num">1</span>-i] = t;
+    }
+    <span class="t-kw">return</span> s;
+}</pre>
+  </div>
+
+  <h3><span class="q">字串</span> 不用 strlen 算長度</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">my_strlen.c</span></div>
+<pre><span class="t-ty">int</span> i = <span class="t-num">0</span>;
+<span class="t-kw">while</span>(a[i] != <span class="t-str">'\0'</span>) i++;  <span class="t-com">// 遇到結尾空字元才停</span></pre>
+  </div>
+
+  <h3><span class="q">DP</span> 最大連續子陣列和（Kadane）</h3>
+  <p>給 <code class="inline">[-2,1,-3,4,-1,2,1,-5,4]</code>，最大子陣列 <code class="inline">[4,-1,2,1]</code> 和為 <strong>6</strong>。經典 O(n) 解法：累加為負就重置。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">max_subarray.c</span></div>
+<pre><span class="t-ty">int</span> <span class="t-fn">maxSubArray</span>(<span class="t-ty">int</span>* nums, <span class="t-ty">int</span> n){
+    <span class="t-ty">int</span> max = nums[<span class="t-num">0</span>], local = nums[<span class="t-num">0</span>];
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">1</span>; i &lt; n; i++){
+        local = (local > <span class="t-num">0</span>) ? local + nums[i] : nums[i];
+        max   = (max &lt; local) ? local : max;
+    }
+    <span class="t-kw">return</span> max;
+}</pre>
+  </div>
+
+  <h3><span class="q">List</span> 反轉單向 Linked List（迭代）</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">reverse_list.c</span></div>
+<pre><span class="t-kw">struct</span> ListNode* <span class="t-fn">reverseList</span>(<span class="t-kw">struct</span> ListNode* head){
+    <span class="t-kw">struct</span> ListNode *prev = <span class="t-num">NULL</span>, *cur = head, *next;
+    <span class="t-kw">while</span>(cur){
+        next = cur-&gt;next;   <span class="t-com">// 暫存下一個</span>
+        cur-&gt;next = prev;   <span class="t-com">// 反指</span>
+        prev = cur;         <span class="t-com">// 推進</span>
+        cur  = next;
+    }
+    <span class="t-kw">return</span> prev;            <span class="t-com">// 新的 head</span>
+}</pre>
+  </div>
+
+  <figure>
+    <svg viewBox="0 0 720 150" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+      <defs><marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#36d399"/></marker>
+            <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="#5aa9f5"/></marker></defs>
+      <text x="20" y="34" fill="#5d6779" font-size="12">before</text>
+      <g font-size="15" text-anchor="middle">
+        <rect x="80" y="20" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="108" y="44" fill="#d8e0ee">A</text>
+        <rect x="200" y="20" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="228" y="44" fill="#d8e0ee">B</text>
+        <rect x="320" y="20" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="348" y="44" fill="#d8e0ee">C</text>
+        <rect x="440" y="20" width="68" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="474" y="44" fill="#5d6779">NULL</text>
+        <line x1="138" y1="39" x2="196" y2="39" stroke="#36d399" stroke-width="2" marker-end="url(#a2)"/>
+        <line x1="258" y1="39" x2="316" y2="39" stroke="#36d399" stroke-width="2" marker-end="url(#a2)"/>
+        <line x1="378" y1="39" x2="436" y2="39" stroke="#36d399" stroke-width="2" marker-end="url(#a2)"/>
+      </g>
+      <text x="20" y="118" fill="#5d6779" font-size="12">after</text>
+      <g font-size="15" text-anchor="middle">
+        <rect x="440" y="104" width="68" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="474" y="128" fill="#5d6779">NULL</text>
+        <rect x="320" y="104" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="348" y="128" fill="#d8e0ee">A</text>
+        <rect x="200" y="104" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="228" y="128" fill="#d8e0ee">B</text>
+        <rect x="80" y="104" width="56" height="38" rx="6" fill="#161b25" stroke="#222b3a"/><text x="108" y="128" fill="#d8e0ee">C</text>
+        <line x1="320" y1="123" x2="378" y2="123" stroke="#5aa9f5" stroke-width="2" marker-end="url(#a3)"/>
+        <line x1="200" y1="123" x2="258" y2="123" stroke="#5aa9f5" stroke-width="2" marker-end="url(#a3)"/>
+        <line x1="80"  y1="123" x2="138" y2="123" stroke="#5aa9f5" stroke-width="2" marker-end="url(#a3)"/>
+      </g>
+    </svg>
+    <figcaption>fig.03 — Linked List 反轉前後的指標方向</figcaption>
+  </figure>
+
+  <h3><span class="q">List</span> 不知長度找中點（快慢指標）</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">middle_node.c</span></div>
+<pre>Node *slow = head, *fast = head;
+<span class="t-kw">while</span>(fast && fast-&gt;next){
+    fast = fast-&gt;next-&gt;next;  <span class="t-com">// 走兩步</span>
+    slow = slow-&gt;next;        <span class="t-com">// 走一步</span>
+}
+<span class="t-com">// fast 到底時，slow 正好在中間</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 不用 if / switch，依 n 呼叫對應函式</h3>
+  <p>用函式指標陣列當跳轉表，最快也最乾淨：</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">jump_table.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">main</span>(<span class="t-ty">int</span> n){
+    <span class="t-ty">void</span> (*f[<span class="t-num">5</span>])() = { func1, func2, func3, func4, func5 };
+    <span class="t-fn">f</span>[n-<span class="t-num">1</span>]();   <span class="t-com">// O(1) 跳轉，免分支</span>
+}
+<span class="t-com">// 若 n 為稀疏值 {33,67,324,231,687}，可用 hash：f[n%8]()</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 計算 1+2+…+N（公式法，避免迴圈）</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">sum_n.c</span></div>
+<pre><span class="t-kw">inline</span> <span class="t-ty">int</span> <span class="t-fn">nSum</span>(<span class="t-ty">int</span> n){
+    <span class="t-kw">return</span> n * (n + <span class="t-num">1</span>) / <span class="t-num">2</span>;   <span class="t-com">// 等差級數公式，O(1)</span>
+}</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 印出 N 大小的菱形 / 三角形</h3>
+  <p>白板常見圖形題：外層控制行，內層先印空白再印 <code class="inline">*</code>。菱形分上下兩個三角形處理。掌握「第 i 行有 <code class="inline">2i-1</code> 個星號、前面 <code class="inline">n-i</code> 個空白」即可。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">triangle.c</span></div>
+<pre><span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++){
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> j = <span class="t-num">0</span>; j &lt; n-i-<span class="t-num">1</span>; j++) <span class="t-fn">printf</span>(<span class="t-str">" "</span>);
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> k = <span class="t-num">0</span>; k &lt; <span class="t-num">2</span>*(i+<span class="t-num">1</span>)-<span class="t-num">1</span>; k++) <span class="t-fn">printf</span>(<span class="t-str">"*"</span>);
+    <span class="t-fn">printf</span>(<span class="t-str">"\n"</span>);
+}</pre>
+  </div>
+
+  <h3><span class="q">struct</span> vs <span class="q">union</span></h3>
+  <p><strong>struct</strong> 為每個成員各配置一段空間；<strong>union</strong> 所有成員共用同一段記憶體，大小等於最大成員。同時間只能存放其中一種資料。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">union.c</span></div>
+<pre><span class="t-kw">union</span> StateMachine {
+    <span class="t-ty">char</span>   character;
+    <span class="t-ty">int</span>    number;
+    <span class="t-ty">char</span>  *str;
+    <span class="t-ty">double</span> exp;     <span class="t-com">// 最大成員 → union 大小 = sizeof(double) = 8</span>
+};</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 各型別 sizeof（32/64-bit 常見值）</h3>
+  <table class="tbl">
+    <thead><tr><th>型別</th><th>bytes</th><th>型別</th><th>bytes</th></tr></thead>
+    <tbody>
+      <tr><td><code>char</code> / <code>unsigned char</code></td><td>1</td><td><code>int</code> / <code>unsigned int</code></td><td>4</td></tr>
+      <tr><td><code>BYTE</code></td><td>1</td><td><code>float</code></td><td>4</td></tr>
+      <tr><td><code>double</code></td><td>8</td><td><code>—</code></td><td>—</td></tr>
+    </tbody>
+  </table>
+
+  <div class="note"><span class="tag">unsigned 溢位陷阱</span>
+    <code class="inline">unsigned int b; for(b=2; b>=0; b--)</code> —— 因 <code class="inline">b</code> 是 unsigned，永遠 <code class="inline">&gt;= 0</code>，迴圈不會結束（b 從 0 減 1 變成超大值）→ 無窮迴圈 / 計數爆掉。</div>
+</section>
+
+<!-- ============ 07 FIRMS ============ -->
+<section id="firms">
+  <div class="sec-eyebrow"><span class="idx">07</span> COMPANIES · 台廠實戰題庫</div>
+  <h2 class="sec-title">面試現場還原</h2>
+  <p class="sec-desc">兩家 IC 設計 / 儲存大廠的真實面試流程與題目。共通點：先做性向 / 適性測驗，再考 C 語言筆試（偏演算法、要求低 CPU / 記憶體用量），最後白板題 + 主管面談聊論文與抗壓性。</p>
+
+  <div class="firm">
+    <div class="firm-head">
+      <div class="firm-logo" style="background:linear-gradient(135deg,#36d399,#1f7a5b)">瑞</div>
+      <div><div class="firm-name">瑞昱 Realtek</div><div class="firm-sub">// IC 設計 · 韌體 / 演算法</div></div>
+    </div>
+    <h4>白板題重點</h4>
+    <ul class="clean">
+      <li>各種 bitwise operation</li>
+      <li>帶入任意數 N，印出 N 大小的菱形圖</li>
+      <li>volatile 優點？為何不把所有變數都設 volatile？（會關掉最佳化、變慢）</li>
+      <li>什麼是指標？什麼時候會用到？</li>
+      <li>情境題：1.1KB 記憶體，程式 A 隨機傳資料給 B，兩者只能透過共用記憶體溝通、每包 1KB —— 設計握手流程（用剩餘 0.1KB 放 bool 旗標，A 寫完設 true、B 讀完設 false）</li>
+    </ul>
+    <h4>面談 / 機智題</h4>
+    <ul class="clean">
+      <li>論文與履歷內容、Integral image 怎麼做、Training data 前處理</li>
+      <li>三門課推薦、最有挑戰 / 最有趣的課程</li>
+      <li>蒙提霍爾問題（三個杯子換不換）、球重問題、求 log7、正方形折出三角形</li>
+    </ul>
+  </div>
+
+  <div class="firm">
+    <div class="firm-head">
+      <div class="firm-logo" style="background:linear-gradient(135deg,#5aa9f5,#3a6fb0)">群</div>
+      <div><div class="firm-name">群聯 Phison</div><div class="firm-sub">// SSD 韌體 · NAND flash controller</div></div>
+    </div>
+    <h4>流程</h4>
+    <ol class="steps">
+      <li>性向測驗（約 30 分鐘）</li>
+      <li>HR 面談：合作經驗、優缺點、最大挫折</li>
+      <li>C 語言筆試 1 小時（網路搜尋「群聯三題」可找到）</li>
+      <li>主管白板題 + 論文細節，效能不佳會要求改進</li>
+      <li>通過後與指導教授訪談 → 核薪</li>
+    </ol>
+    <h4>群聯三題（經典）</h4>
+    <p><strong>題一：</strong>給已排序 <code class="inline">int a[20]</code>，印出 0~500 中「不在陣列裡」的數，要求最少時間 / 空間。用單一指標掃過，匹配到就推進指標，否則印出當前值 —— O(n)、零額外空間。</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">phison_q1.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">question1</span>(<span class="t-ty">int</span>* a, <span class="t-ty">int</span> size){
+    <span class="t-ty">int</span>* p = a;
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt;= <span class="t-num">500</span>; i++){
+        <span class="t-kw">if</span>(i == *p) p++;          <span class="t-com">// 命中陣列元素，跳過</span>
+        <span class="t-kw">else</span> <span class="t-fn">printf</span>(<span class="t-str">"%d "</span>, i);
+    }
+}</pre>
+    </div>
+    <p><strong>題二：</strong>同上，但多一參數 <code class="inline">b (0~4)</code> 指定印出 <code class="inline">b*100 ~ b*100+99</code> 區間。先把指標推進到區間起點再掃。</p>
+    <p><strong>題三：</strong>情境題 —— 在 <code class="inline">ListArray[1000]</code> 中找出 <code class="inline">DataH == A && DataL == B</code> 的節點並印出，找不到印 <code class="inline">"no found."</code>。沿著 <code class="inline">NextPtr</code> 走訪（注意：主管可能要求用雙向串列）。</p>
+
+    <h4>其他白板題</h4>
+    <ul class="clean">
+      <li>0~500 每次隨機抽一個數，下次不可重複 —— 怎麼實作（洗牌 / 標記）</li>
+      <li>8-bit 值求最高位元在第幾位，並優化效率</li>
+      <li>自幹 sort（bubble → merge → quick → bucket，由淺入深）</li>
+      <li>費氏數列變形：<code class="inline">11,12,23,35,58…</code> 給位置 n 求值（迭代法）</li>
+      <li>大陣列搜尋：未排序時用 hash / binary tree；少一個元素時用「全和相減」找缺值</li>
+      <li>寫 function 判斷整數是否為 2 的次方（含 log 解法）</li>
+      <li>little / big endian 變數存放、set/clear 指定 bit</li>
+      <li>自幹 strcmp、不用 temp 交換、struct/union/volatile 解釋</li>
+    </ul>
+    <div class="note"><span class="tag">面談心得</span>
+      最好能用英文自我介紹與講碩論；對公司產品不能只粗淺了解 —— 要能答出有哪些產品、什麼是 NAND flash、什麼是 UFS。壓力測試題常問「快到 deadline 突然驗出 bug 怎麼辦」。</div>
+  </div>
+</section>
+
+<!-- ============ 08 BRAIN ============ -->
+<section id="brain">
+  <div class="sec-eyebrow"><span class="idx">08</span> PUZZLES · 智力 / 機智題</div>
+  <h2 class="sec-title">非程式邏輯題</h2>
+  <p class="sec-desc">面試尾聲常出現的腦力題，考的是拆解問題與清楚表達思路的能力，而非標準答案。</p>
+
+  <h3><span class="q">P1</span> 砝碼組合 1~100 公克</h3>
+  <p>用最少砝碼湊出 1~100：採二進位思維 <code class="inline">1, 2, 4, 8, 16, 32, 64</code> 共 <strong>7 個</strong>即可組合出 1~127 的任意整數。（這是科技業偏好的「位元」考法。）</p>
+
+  <h3><span class="q">P2</span> 球重問題（8 顆找 1 輕球）</h3>
+  <p>8 顆球，1 顆較輕，天平秤兩次找出：分成 <code class="inline">A=[1,2,3]</code>、<code class="inline">B=[4,5,6]</code>、<code class="inline">C=[7,8]</code>。</p>
+  <ol class="steps">
+    <li>秤 A vs B。平衡 → 輕球在 C，再秤 7 vs 8 即知。</li>
+    <li>A &gt; B（B 輕）→ 秤 4 vs 5；平衡則 6，否則較輕者。A &lt; B 同理在 A 中。</li>
+  </ol>
+  <p class="lead">最少 <strong>2 次</strong>。若改成「找較重球」或「不知輕重」，用編號分組的方法同樣可解。</p>
+
+  <h3><span class="q">P3</span> 蒙提霍爾（三杯換不換）</h3>
+  <p>你選一杯後，主持人開了另一個空杯。<strong>應該換</strong> —— 換的中獎機率是 2/3，不換只有 1/3。直覺：你初選命中大獎的機率只有 1/3，剩下 2/3 的機率集中到了主持人沒開的那杯。</p>
+
+  <h3><span class="q">P4</span> 經典參考連結</h3>
+  <ul class="clean">
+    <li><a class="link" href="https://www.matrix67.com/blog/archives/4152" target="_blank" rel="noopener">正方形折出等邊三角形（matrix67）</a> —— 利用 30° 角的折痕構造</li>
+    <li><a class="link" href="https://en.wikipedia.org/wiki/XOR_swap_algorithm" target="_blank" rel="noopener">XOR swap algorithm（Wikipedia）</a></li>
+    <li><a class="link" href="https://openhome.cc/Gossip/CGossip/Pointer.html" target="_blank" rel="noopener">指標教學（openhome.cc）</a></li>
+  </ul>
+</section>
+
+  </main>
+</div>
+</div>
+
+<footer>
+  <div class="wrap">
+    <div>程人頻道 大補帖 Ver1.1 · 重新編排版 — C 語言面試速查手冊</div>
+    <div style="margin-top:6px;color:#5d6779">原始內容整理自 HackMD 共筆 · 本頁僅作學習用途排版重製</div>
+  </div>
+</footer>
+
+<script>
+  // progress bar
+  const bar = document.getElementById('progress');
+  const links = [...document.querySelectorAll('aside.toc a')];
+  const secs = links.map(a => document.querySelector(a.getAttribute('href')));
+  function onScroll(){
+    const h = document.documentElement;
+    const pct = h.scrollTop / (h.scrollHeight - h.clientHeight);
+    bar.style.width = (pct*100) + '%';
+    let active = 0;
+    secs.forEach((s,i)=>{ if(s && s.getBoundingClientRect().top < 120) active = i; });
+    links.forEach((a,i)=> a.classList.toggle('active', i===active));
+  }
+  document.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+</script>
+</body>
+</html>
