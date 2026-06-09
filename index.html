@@ -250,7 +250,7 @@
     <p class="subtitle">從記憶體配置、指標判讀、巨集到位元運算與經典演算法題 —— 一份為韌體與軟體工程師面試準備的速查手冊，含台廠（瑞昱、群聯）實戰題庫。</p>
     <div class="meta-row">
       <span class="chip"><b>5</b> 核心觀念章節</span>
-      <span class="chip"><b>40+</b> 題目與解答</span>
+      <span class="chip"><b>60+</b> 題目與解答</span>
       <span class="chip"><b>2</b> 公司實戰題庫</span>
       <span class="chip">語言 · <b>C / C++</b></span>
     </div>
@@ -441,6 +441,31 @@ some_var = <span class="t-num">100</span>;            <span class="t-com">// OK<
 
   <h3><span class="q">Q</span> const 與 volatile 可以合用嗎？</h3>
   <p><code class="inline">extern const volatile unsigned int rt_clock;</code> —— RTOS 中常見。<code class="inline">rt_clock</code> 被時鐘中斷更新（所以 volatile，要每次重讀），但程式其他地方不應修改它（所以 const）。兩者並不矛盾。</p>
+
+  <h3><span class="q">Q</span> 解釋 lvalue 與 rvalue</h3>
+  <div class="ans"><span class="tag">答案</span>
+    <strong>lvalue（location value）</strong>是「運算式結束後仍保留狀態的物件」 —— 也就是有名字、有記憶體位址、可放在等號左邊的東西。所有變數（含 <code class="inline">const</code> 變數）都是 lvalue。<br><br>
+    <strong>rvalue（read value）</strong>是「運算式求值後就不保留的暫存值」 —— 沒有名字、不可被取址，通常出現在等號右邊。<br><br>
+    區別範例：<code class="inline">++c</code> 是 lvalue（回傳變數本身）；<code class="inline">c++</code> 是 rvalue（回傳遞增前的暫存副本）。所以 <code class="inline">++c = 5</code> 合法，<code class="inline">c++ = 5</code> 不合法。</div>
+
+  <h3><span class="q">Q</span> 解釋 <code class="inline">#error</code></h3>
+  <p><code class="inline">#error</code> 是前置處理指令，編譯期遇到它會立即中止編譯並印出後面的訊息。常用於條件編譯檢查環境是否合法。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">error_directive.c</span></div>
+<pre><span class="t-pp">#if</span> !defined(__STDC__)
+<span class="t-pp">#error</span> "需要 ANSI C 編譯器才能編譯本檔"
+<span class="t-pp">#endif</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 指標宣告 <code class="inline">Ival = *p;</code> 可能的錯誤</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">deref_err.c</span></div>
+<pre><span class="t-ty">int</span>  ival;
+<span class="t-ty">int</span> **p;
+ival = *p;   <span class="t-com">// ✗ *p 的型別是 int*（指標），不能指派給 int</span></pre>
+  </div>
+  <div class="ans"><span class="tag">答案</span>
+    <code class="inline">p</code> 是「指向指標的指標」，<code class="inline">*p</code> 解一層後型別為 <code class="inline">int*</code>，要再解一層 <code class="inline">**p</code> 才是 <code class="inline">int</code>。直接把指標指派給整數會型別不符；且 <code class="inline">p</code> 未初始化就解參考是未定義行為。</div>
 </section>
 
 <!-- ============ 03 POINTER ============ -->
@@ -640,6 +665,32 @@ v = (v1 & ~v2) | v2;
 
   <h3><span class="q">Q</span> 求最高位元在第幾位（瑞昱題）</h3>
   <p><code class="inline">int a = 0xfafc;</code> 求第 9 個 bit 值：<code class="inline">return (a >> 8) & 1;</code> —— 右移 8 位後 AND 1 取出該位。<code class="inline">0xfafc = 1111101011111100</code>，第 9 位為 <strong>0</strong>。</p>
+
+  <h3><span class="q">Q</span> 連續位元運算後 A 的值</h3>
+  <p><code class="inline">char A = 31;</code>（二進位 <code class="inline">0001 1111</code>），逐步運算：</p>
+  <table class="tbl">
+    <thead><tr><th>運算</th><th>結果</th><th>說明</th></tr></thead>
+    <tbody>
+      <tr><td><code>A = A | 14;</code></td><td>31</td><td><code>0001 1111 | 0000 1110 = 0001 1111</code>，14 的位元已包含於 31</td></tr>
+      <tr><td><code>A = A &amp; (~A);</code></td><td>0</td><td>任何數 AND 自己的補數恆為 0</td></tr>
+      <tr><td><code>A = A ^ A;</code></td><td>0</td><td>任何數 XOR 自己恆為 0</td></tr>
+    </tbody>
+  </table>
+
+  <h3><span class="q">Q</span> 將某數的第 x 個 bit 改成 1 或 0（群聯題）</h3>
+  <div class="ans"><span class="tag">答案</span>
+    改成 <strong>1</strong>：直接 OR 一個遮罩 → <code class="inline">x |= (1 &lt;&lt; n);</code><br>
+    改成 <strong>0</strong>：先做反遮罩再 AND → <code class="inline">x &amp;= ~(1 &lt;&lt; n);</code></div>
+
+  <h3><span class="q">Q</span> 跨變數複製指定位元</h3>
+  <p>把來源的某幾個 bit 複製到目標的某幾個 bit：先用遮罩清掉目標位元，再把對齊後的來源位元 OR 進去。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">copy_bits.c</span></div>
+<pre><span class="t-com">// 取 src 的第 4~7 位，覆蓋到 dst 的第 1~4 位</span>
+<span class="t-ty">unsigned</span> field = (src &gt;&gt; <span class="t-num">4</span>) & <span class="t-num">0xF</span>;   <span class="t-com">// 取出 4 個 bit</span>
+dst &= ~(<span class="t-num">0xF</span> &lt;&lt; <span class="t-num">1</span>);                  <span class="t-com">// 清掉目標位元</span>
+dst |= (field &lt;&lt; <span class="t-num">1</span>);                 <span class="t-com">// 對齊後寫入</span></pre>
+  </div>
 </section>
 
 <!-- ============ 06 ALGO ============ -->
@@ -791,6 +842,203 @@ v = (v1 & ~v2) | v2;
 
   <div class="note"><span class="tag">unsigned 溢位陷阱</span>
     <code class="inline">unsigned int b; for(b=2; b>=0; b--)</code> —— 因 <code class="inline">b</code> 是 unsigned，永遠 <code class="inline">&gt;= 0</code>，迴圈不會結束（b 從 0 減 1 變成超大值）→ 無窮迴圈 / 計數爆掉。</div>
+
+  <h3><span class="q">字串</span> 串接 strcat / strncat</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">strcat.c</span></div>
+<pre><span class="t-ty">char</span> str1[<span class="t-num">80</span>] = <span class="t-str">"xyz"</span>, str2[] = <span class="t-str">"abc"</span>;
+<span class="t-fn">strcat</span>(str1, str2);      <span class="t-com">// str1 = "xyzabc"</span>
+<span class="t-fn">strncat</span>(str1, str2, <span class="t-num">2</span>);  <span class="t-com">// str1 = "xyzabcab"（只接前 2 字元）</span></pre>
+  </div>
+
+  <h3><span class="q">字串</span> 偵測大小寫用法（Detect Capital）</h3>
+  <p>判斷單字是否符合：全大寫（USA）、全小寫（leet）、或僅首字母大寫（Google）。其餘如 <code class="inline">FlaG</code> 回傳 false。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">detect_capital.c</span></div>
+<pre><span class="t-ty">bool</span> <span class="t-fn">detectCapitalUse</span>(<span class="t-ty">char</span>* w){
+    <span class="t-ty">int</span> n = <span class="t-fn">strlen</span>(w), upper = <span class="t-num">0</span>;
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++)
+        <span class="t-kw">if</span>(w[i] &gt;= <span class="t-str">'A'</span> && w[i] &lt;= <span class="t-str">'Z'</span>) upper++;
+    <span class="t-com">// 全大寫 || 全小寫 || (只有首字大寫)</span>
+    <span class="t-kw">return</span> upper == n || upper == <span class="t-num">0</span> ||
+           (upper == <span class="t-num">1</span> && w[<span class="t-num">0</span>] &gt;= <span class="t-str">'A'</span> && w[<span class="t-num">0</span>] &lt;= <span class="t-str">'Z'</span>);
+}</pre>
+  </div>
+
+  <h3><span class="q">排序</span> 合併兩個已排序陣列（Merge Sorted Array）</h3>
+  <p>把 <code class="inline">nums2</code> 接到 <code class="inline">nums1</code> 後再整體排序。<code class="inline">nums1=[1,2,3,0,0,0]</code>、<code class="inline">nums2=[2,5,6]</code> → <code class="inline">[1,2,2,3,5,6]</code>。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">merge_sorted.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">merge</span>(<span class="t-ty">int</span>* a, <span class="t-ty">int</span> m, <span class="t-ty">int</span>* b, <span class="t-ty">int</span> n){
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++) a[m+i] = b[i];  <span class="t-com">// 先接上</span>
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; m+n-<span class="t-num">1</span>; i++)            <span class="t-com">// 再 bubble sort</span>
+        <span class="t-kw">for</span>(<span class="t-ty">int</span> j = <span class="t-num">0</span>; j &lt; m+n-<span class="t-num">1</span>-i; j++)
+            <span class="t-kw">if</span>(a[j] &gt; a[j+<span class="t-num">1</span>]){ <span class="t-ty">int</span> t=a[j]; a[j]=a[j+<span class="t-num">1</span>]; a[j+<span class="t-num">1</span>]=t; }
+}</pre>
+  </div>
+
+  <h3><span class="q">排序</span> 奇數遞增在前、偶數遞減在後</h3>
+  <p>給正整數數列，重排成：奇數部分由小到大、偶數部分由大到小。做法 —— 分流到兩個陣列，奇數陣列升冪、偶數陣列降冪，再串接。</p>
+  <div class="ans"><span class="tag">解題步驟</span>
+    1. 用 <code class="inline">array[i] & 1</code> 判斷奇偶並分流到 <code class="inline">odd[]</code> / <code class="inline">even[]</code>。<br>
+    2. <code class="inline">odd[]</code> 升冪排序、<code class="inline">even[]</code> 降冪排序（bubble sort 即可）。<br>
+    3. 先放奇數、再放偶數，合併成結果陣列。</div>
+
+  <h3><span class="q">DP</span> 長度 K 的最大區段和變形（連續和最大）</h3>
+  <p>輸入 <code class="inline">[2,3,-8,1,2,3]</code>，求連續子陣列最大和 → <strong>6</strong>（第 4~6 項）。與 Kadane 同源，累加為負就重置。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">max_window.c</span></div>
+<pre><span class="t-ty">int</span> max = <span class="t-num">0</span>, temp = <span class="t-num">0</span>;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; len; i++){
+    temp = (temp &gt;= <span class="t-num">0</span>) ? temp + a[i] : a[i];
+    <span class="t-kw">if</span>(temp &gt; max) max = temp;
+}</pre>
+  </div>
+
+  <h3><span class="q">陣列</span> 兩陣列交集（Intersection）</h3>
+  <p><code class="inline">nums1=[4,9,5]</code>、<code class="inline">nums2=[9,4,9,8,4]</code> → 交集 <code class="inline">[9,4]</code>（去重）。雙層迴圈比對，命中後檢查結果是否已存在再加入。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">intersection.c</span></div>
+<pre><span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n1; i++)
+  <span class="t-kw">for</span>(<span class="t-ty">int</span> j = <span class="t-num">0</span>; j &lt; n2; j++)
+    <span class="t-kw">if</span>(nums1[i] == nums2[j]){
+        <span class="t-ty">int</span> k = <span class="t-num">0</span>;
+        <span class="t-kw">while</span>(k &lt; *sz && res[k] != nums1[i]) k++;
+        <span class="t-kw">if</span>(k == *sz) res[(*sz)++] = nums1[i];  <span class="t-com">// 不重複才加</span>
+        <span class="t-kw">break</span>;
+    }</pre>
+  </div>
+
+  <h3><span class="q">質數</span> 計算小於 n 的質數個數</h3>
+  <p>輸入 10 → 輸出 4（2,3,5,7）。逐一檢查每個數是否為質數並計數。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">count_primes.c</span></div>
+<pre><span class="t-ty">bool</span> <span class="t-fn">isPrime</span>(<span class="t-ty">int</span> n){
+    <span class="t-kw">if</span>(n &lt; <span class="t-num">2</span>) <span class="t-kw">return</span> <span class="t-num">false</span>;
+    <span class="t-kw">for</span>(<span class="t-ty">int</span> j = <span class="t-num">2</span>; j*j &lt;= n; j++)   <span class="t-com">// 只需檢查到 √n</span>
+        <span class="t-kw">if</span>(n % j == <span class="t-num">0</span>) <span class="t-kw">return</span> <span class="t-num">false</span>;
+    <span class="t-kw">return</span> <span class="t-num">true</span>;
+}
+<span class="t-com">// 第 n 個質數：從 2 開始計數，第 n 個 isPrime 為真者即是</span></pre>
+  </div>
+
+  <h3><span class="q">質數</span> 判斷兩數是否互質（coprime）</h3>
+  <p>互質 = 最大公因數為 1。最簡潔做法是輾轉相除法求 GCD。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">coprime.c</span></div>
+<pre><span class="t-ty">int</span> <span class="t-fn">gcd</span>(<span class="t-ty">int</span> a, <span class="t-ty">int</span> b){ <span class="t-kw">return</span> b ? <span class="t-fn">gcd</span>(b, a % b) : a; }
+<span class="t-com">// gcd(a,b) == 1 → 互質（coprime），否則 not coprime</span></pre>
+  </div>
+
+  <h3><span class="q">陣列</span> 找出第二大的值</h3>
+  <p>一次掃描維護最大值 <code class="inline">max1</code> 與次大值 <code class="inline">max2</code>，O(n) 不需排序。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">second_max.c</span></div>
+<pre><span class="t-ty">int</span> m1 = INT_MIN, m2 = INT_MIN;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++){
+    <span class="t-kw">if</span>(a[i] &gt; m1){ m2 = m1; m1 = a[i]; }
+    <span class="t-kw">else</span> <span class="t-kw">if</span>(a[i] &gt; m2 && a[i] != m1) m2 = a[i];
+}
+<span class="t-com">// m2 即為第二大值</span></pre>
+  </div>
+
+  <h3><span class="q">陣列</span> 找出被抽掉的數（不知位置）</h3>
+  <p>原陣列為 0~n 連續或已知總和。把「應有的總和」減去「現有總和」，差值即缺失的數。O(n) 時間、O(1) 空間。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">missing_num.c</span></div>
+<pre><span class="t-ty">int</span> full = n * (n + <span class="t-num">1</span>) / <span class="t-num">2</span>;  <span class="t-com">// 0..n 的應有總和</span>
+<span class="t-ty">int</span> sum = <span class="t-num">0</span>;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++) sum += a[i];
+<span class="t-com">// 缺失值 = full - sum</span></pre>
+  </div>
+
+  <h3><span class="q">字串</span> 自幹 strcmp</h3>
+  <p>逐字元比較，回傳差值：相等回 0，前者大回正、後者大回負。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">my_strcmp.c</span></div>
+<pre><span class="t-ty">int</span> <span class="t-fn">myStrcmp</span>(<span class="t-kw">const</span> <span class="t-ty">char</span>* a, <span class="t-kw">const</span> <span class="t-ty">char</span>* b){
+    <span class="t-kw">while</span>(*a && (*a == *b)){ a++; b++; }
+    <span class="t-kw">return</span> *(<span class="t-kw">const</span> <span class="t-ty">unsigned char</span>*)a - *(<span class="t-kw">const</span> <span class="t-ty">unsigned char</span>*)b;
+}</pre>
+  </div>
+
+  <h3><span class="q">數列</span> 廣義費氏數列：給位置 n 求值</h3>
+  <p>數列 <code class="inline">11,12,23,35,58…</code>（每項為前兩項之和，起始 a=11, b=12）。迭代法 O(n)。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">fib_like.c</span></div>
+<pre><span class="t-ty">int</span> a = <span class="t-num">11</span>, b = <span class="t-num">12</span>;
+<span class="t-kw">if</span>(n == <span class="t-num">0</span>) <span class="t-kw">return</span> a;
+<span class="t-kw">if</span>(n == <span class="t-num">1</span>) <span class="t-kw">return</span> b;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">2</span>; i &lt;= n; i++){ <span class="t-ty">int</span> t = b; b = a + b; a = t; }
+<span class="t-kw">return</span> b;</pre>
+  </div>
+
+  <h3><span class="q">Q</span> call by value vs call by reference 的 SWAP</h3>
+  <p><strong>call by value</strong> 傳的是副本，函式內交換不影響外部 → 主程式印出的值不變。<strong>call by reference</strong>（傳指標）才能真正交換。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">swap_ref.c</span></div>
+<pre><span class="t-com">// call by value：無效，外部 a,b 不變</span>
+<span class="t-ty">void</span> <span class="t-fn">swapVal</span>(<span class="t-ty">int</span> a, <span class="t-ty">int</span> b){ <span class="t-ty">int</span> t=a; a=b; b=t; }
+
+<span class="t-com">// call by reference：有效</span>
+<span class="t-ty">void</span> <span class="t-fn">swapRef</span>(<span class="t-ty">int</span> *a, <span class="t-ty">int</span> *b){ <span class="t-ty">int</span> t=*a; *a=*b; *b=t; }</pre>
+  </div>
+
+  <h3><span class="q">C++</span> 運算子多載（operator +）</h3>
+  <p>實作一個含 4 個整數的向量類別，多載 <code class="inline">+</code> 讓兩個物件可直接相加。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">my_vector.cpp</span></div>
+<pre><span class="t-kw">class</span> MyVector {
+    <span class="t-ty">int</span> e[<span class="t-num">4</span>];
+<span class="t-kw">public</span>:
+    <span class="t-fn">MyVector</span>(<span class="t-ty">int</span> a=<span class="t-num">0</span>,<span class="t-ty">int</span> b=<span class="t-num">0</span>,<span class="t-ty">int</span> c=<span class="t-num">0</span>,<span class="t-ty">int</span> d=<span class="t-num">0</span>){ e[<span class="t-num">0</span>]=a;e[<span class="t-num">1</span>]=b;e[<span class="t-num">2</span>]=c;e[<span class="t-num">3</span>]=d; }
+    MyVector <span class="t-kw">operator</span>+(<span class="t-kw">const</span> MyVector& o) <span class="t-kw">const</span> {
+        <span class="t-kw">return</span> <span class="t-fn">MyVector</span>(e[<span class="t-num">0</span>]+o.e[<span class="t-num">0</span>], e[<span class="t-num">1</span>]+o.e[<span class="t-num">1</span>],
+                        e[<span class="t-num">2</span>]+o.e[<span class="t-num">2</span>], e[<span class="t-num">3</span>]+o.e[<span class="t-num">3</span>]);
+    }
+};</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 子集合最大和</h3>
+  <p>給陣列，求所有子集合中總和的最大值。<code class="inline">[2,-1,4,-2,2]</code> → <strong>6</strong>（子集合 <code class="inline">[2,4,2]</code> 或題述 <code class="inline">[2,4]</code>）。關鍵洞察：只要把所有<strong>正數</strong>加起來就是最大子集合和（負數不選）。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">subset_max.c</span></div>
+<pre><span class="t-ty">int</span> sum = <span class="t-num">0</span>;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt; n; i++)
+    <span class="t-kw">if</span>(a[i] &gt; <span class="t-num">0</span>) sum += a[i];   <span class="t-com">// 只挑正數，O(n)</span>
+<span class="t-com">// 全為負時，最大子集合和取最大的單一元素</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 印出 0~500 但每次隨機抽一個、不重複（群聯白板題）</h3>
+  <p>建一個 0~500 的陣列，用 Fisher–Yates 洗牌：每次從未抽過的範圍隨機取一個與末端交換，再縮小範圍。保證 O(1) 抽取且不重複。</p>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">shuffle_pick.c</span></div>
+<pre><span class="t-ty">int</span> pool[<span class="t-num">501</span>];
+<span class="t-kw">for</span>(<span class="t-ty">int</span> i = <span class="t-num">0</span>; i &lt;= <span class="t-num">500</span>; i++) pool[i] = i;
+<span class="t-kw">for</span>(<span class="t-ty">int</span> last = <span class="t-num">500</span>; last &gt;= <span class="t-num">0</span>; last--){
+    <span class="t-ty">int</span> r = <span class="t-fn">rand</span>() % (last + <span class="t-num">1</span>);
+    <span class="t-ty">int</span> t = pool[r]; pool[r] = pool[last]; pool[last] = t;
+    <span class="t-fn">printf</span>(<span class="t-str">"%d "</span>, pool[last]);  <span class="t-com">// 抽出且不再重複</span>
+}</pre>
+  </div>
+
+  <h3><span class="q">Q</span> 寫一個會發生 memory leak 的程式</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">leak.c</span></div>
+<pre><span class="t-ty">void</span> <span class="t-fn">leak</span>(){
+    <span class="t-ty">int</span> *p = <span class="t-fn">malloc</span>(<span class="t-num">100</span> * <span class="t-kw">sizeof</span>(<span class="t-ty">int</span>));
+    p = <span class="t-num">NULL</span>;   <span class="t-com">// ✗ 指標被覆蓋，那塊記憶體再也 free 不到 → leak</span>
+}                  <span class="t-com">// 正解應在覆蓋前 free(p);</span></pre>
+  </div>
+
+  <h3><span class="q">Q</span> 寫一個會發生指標失效但編譯成功的程式</h3>
+  <div class="code">
+    <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">dangling.c</span></div>
+<pre><span class="t-ty">int</span>* <span class="t-fn">bad</span>(){
+    <span class="t-ty">int</span> x = <span class="t-num">42</span>;
+    <span class="t-kw">return</span> &x;   <span class="t-com">// ✗ 回傳區域變數位址；函式結束後 x 已失效</span>
+}                  <span class="t-com">// 編譯過，但解參考是 dangling pointer（未定義行為）</span></pre>
+  </div>
 </section>
 
 <!-- ============ 07 FIRMS ============ -->
@@ -847,6 +1095,23 @@ v = (v1 & ~v2) | v2;
     </div>
     <p><strong>題二：</strong>同上，但多一參數 <code class="inline">b (0~4)</code> 指定印出 <code class="inline">b*100 ~ b*100+99</code> 區間。先把指標推進到區間起點再掃。</p>
     <p><strong>題三：</strong>情境題 —— 在 <code class="inline">ListArray[1000]</code> 中找出 <code class="inline">DataH == A && DataL == B</code> 的節點並印出，找不到印 <code class="inline">"no found."</code>。沿著 <code class="inline">NextPtr</code> 走訪（注意：主管可能要求用雙向串列）。</p>
+    <div class="code">
+      <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">phison_q3.c</span></div>
+<pre><span class="t-pp">#define</span> NULL_PTR <span class="t-num">0xFFFF</span>
+<span class="t-ty">int</span> <span class="t-fn">searchList</span>(<span class="t-ty">unsigned</span> A, <span class="t-ty">unsigned</span> B){
+    <span class="t-ty">unsigned</span> e = ListHead;          <span class="t-com">// 從串列頭開始</span>
+    <span class="t-kw">while</span>(e != NULL_PTR){
+        <span class="t-kw">if</span>(ListArray[e].DataH == A &&
+           ListArray[e].DataL == B){
+            <span class="t-fn">printf</span>(<span class="t-str">"found at %u\n"</span>, e);
+            <span class="t-kw">return</span> e;
+        }
+        e = ListArray[e].NextPtr;     <span class="t-com">// 走到下一個節點</span>
+    }
+    <span class="t-fn">printf</span>(<span class="t-str">"no found.\n"</span>);
+    <span class="t-kw">return</span> -<span class="t-num">1</span>;
+}</pre>
+    </div>
 
     <h4>其他白板題</h4>
     <ul class="clean">
@@ -884,7 +1149,34 @@ v = (v1 & ~v2) | v2;
   <h3><span class="q">P3</span> 蒙提霍爾（三杯換不換）</h3>
   <p>你選一杯後，主持人開了另一個空杯。<strong>應該換</strong> —— 換的中獎機率是 2/3，不換只有 1/3。直覺：你初選命中大獎的機率只有 1/3，剩下 2/3 的機率集中到了主持人沒開的那杯。</p>
 
-  <h3><span class="q">P4</span> 經典參考連結</h3>
+  <h3><span class="q">P4</span> 手扶梯綁鞋帶（瑞昱題）</h3>
+  <p>從登機口走到飛機，中間有一段手扶梯，走到一半鞋帶掉了，何時綁鞋帶總時間最短？</p>
+  <div class="ans"><span class="tag">答案：在手扶梯上綁</span>
+    綁鞋帶花的時間是固定的（設為 <code class="inline">t</code>）。在手扶梯上綁時，雖然人站著沒走，但手扶梯仍以速度 <code class="inline">v_扶梯</code> 載著你前進；在平地綁則完全靜止不前進。<br><br>
+    設總路程其餘部分時間相同，唯一差別在綁鞋帶這段 <code class="inline">t</code> 內的位移：扶梯上前進 <code class="inline">v_扶梯 × t</code>，平地前進 0。前進越多 → 剩餘要走的距離越短 → 總時間越短。故<strong>在手扶梯上綁</strong>最省時。</div>
+
+  <h3><span class="q">P5</span> 已知 log2~log9，如何求 log7？</h3>
+  <div class="ans"><span class="tag">答案</span>
+    用對數律湊近似值。例如 <code class="inline">7² = 49 ≈ 48 = 16 × 3</code>，所以<br>
+    <code class="inline">2·log7 ≈ log48 = log16 + log3 = 4·log2 + log3</code><br>
+    <code class="inline">log7 ≈ (4·log2 + log3) / 2</code>。<br>
+    或用 <code class="inline">7³ = 343 ≈ 343</code>、<code class="inline">50 = 100/2</code> 等湊法逼近，誤差極小。</div>
+
+  <h3><span class="q">P6</span> 用正方形紙折出等邊三角形</h3>
+  <div class="ans"><span class="tag">答案（為什麼成立）</span>
+    對稱性使兩道折痕等長，只需證明夾角為 60°。折疊時會構成「斜邊長為直角邊兩倍」的直角三角形 —— 這正是 30°-60°-90° 三角形，因此產生 30° 角。由此可推得前兩道折痕與紙邊各夾 15°，兩折痕之間的夾角剛好 <strong>60°</strong>，即等邊三角形。詳見下方參考連結。</div>
+
+  <h3><span class="q">P7</span> 兩程式透過共用記憶體傳資料（瑞昱情境題）</h3>
+  <p>1.1KB 記憶體，程式 A 隨機傳資料給 B，兩者無法直接溝通、每包資料 1KB。設計握手流程：</p>
+  <ol class="steps">
+    <li>用 1KB 放資料，剩餘 0.1KB（約 100 Byte）放一個 <code class="inline">bool</code> 旗標。</li>
+    <li>A 寫完整包資料後，將旗標設為 <code class="inline">true</code>。</li>
+    <li>B 輪詢旗標，看到 <code class="inline">true</code> 就讀取資料。</li>
+    <li>B 讀完把旗標設回 <code class="inline">false</code>，通知 A 可以寫下一包。</li>
+  </ol>
+  <p class="lead">這是典型的單一旗標 producer–consumer 同步；嚴謹版會再加上資料是否就緒的雙旗標或環形緩衝避免競爭。</p>
+
+  <h3><span class="q">P8</span> 經典參考連結</h3>
   <ul class="clean">
     <li><a class="link" href="https://www.matrix67.com/blog/archives/4152" target="_blank" rel="noopener">正方形折出等邊三角形（matrix67）</a> —— 利用 30° 角的折痕構造</li>
     <li><a class="link" href="https://en.wikipedia.org/wiki/XOR_swap_algorithm" target="_blank" rel="noopener">XOR swap algorithm（Wikipedia）</a></li>
